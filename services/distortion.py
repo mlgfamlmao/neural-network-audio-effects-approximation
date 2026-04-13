@@ -1,8 +1,7 @@
 import numpy as np
 
-# -----------------------------
-# Memoryless distortion
-# -----------------------------
+SAMPLE_RATE = 44100
+
 
 def hard_clip(x, threshold=0.5):
     return np.clip(x, -threshold, threshold)
@@ -17,7 +16,7 @@ def bitcrush(x, bits=4):
     return np.round(x * levels) / levels
 
 
-def wavefold(x, threshold=0.6):
+def wavefold(x, threshold=0.05):
     y = np.copy(x)
 
     # Above threshold
@@ -58,3 +57,14 @@ def xor_distortion(x, mask=0x0F0F):
     xored = xored.astype(np.int16)
 
     return from_int16(xored)
+
+def tremolo(x, sr=44100, freq=5, depth=0.7):
+    t = np.arange(len(x)) / sr
+    lfo = 1 + depth * np.sin(2 * np.pi * freq * t)
+    return x * lfo
+
+def reverb(x, decay=0.5, delay=2000):
+    y = np.copy(x)
+    for i in range(delay, len(x)):
+        y[i] += decay * y[i - delay]
+    return y
