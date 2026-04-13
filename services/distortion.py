@@ -30,10 +30,6 @@ def wavefold(x, threshold=0.05):
     return y
 
 
-# -----------------------------
-# Bitwise logic modulation
-# -----------------------------
-
 def to_int16(x):
     scaled = (x * 32767).astype(np.int32)
     scaled = np.clip(scaled, -32768, 32767)
@@ -47,13 +43,13 @@ def from_int16(x):
 def xor_distortion(x, mask=0x0F0F):
     xi = to_int16(x)
 
-    # Convert to unsigned 16-bit
+    
     unsigned = xi.astype(np.uint16)
 
-    # XOR operation
+
     xored = unsigned ^ mask
 
-    # Convert back to signed int16
+    
     xored = xored.astype(np.int16)
 
     return from_int16(xored)

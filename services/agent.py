@@ -6,14 +6,13 @@ import math
 import google.generativeai as genai
 from dotenv import load_dotenv
 
-# ====================== SETUP ======================
 load_dotenv()
-# Configure the Google SDK directly with your API key
+
 genai.configure(api_key=os.environ["GOOGLE_API_KEY"])
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-# ====================== NEURAL NETWORK ARCHITECTURE ======================
+
 class SimpleAudioNN(nn.Module):
     def __init__(self, kernel_size=1): 
         super().__init__()
@@ -30,7 +29,6 @@ class SimpleAudioNN(nn.Module):
     def forward(self, x):
         return self.net(x)
 
-# ====================== LOAD YOUR MODELS ======================
 print("Loading neural network weights...")
 
 model_fuzz = SimpleAudioNN(kernel_size=1).to(device)
@@ -50,23 +48,11 @@ models["wave_folding"].load_state_dict(torch.load("models/WaveFolding.pth", map_
 for name, model in models.items():
     model.eval()
 
-# ====================== THE TOOL ======================
-# With the Google SDK, tools are just standard Python functions.
-# The docstring and type hints are CRITICAL—this is how Gemini knows how to use it!
 
 def apply_distortion(audio_path: str, effect_type: str) -> str:
-    """
-    Applies a mathematical distortion effect to a .wav audio file and saves the output.
-    
-    Args:
-        audio_path: The exact file path to the user's .wav audio file.
-        effect_type: The type of distortion to apply. MUST be 'fuzz', 'soft_clip', or 'wave_folding'.
-        
-    Returns:
-        A string confirming the file was successfully processed and saved, or an error message.
-    """
+
     if effect_type not in models:
-        return f"Error: '{effect_type}' is not a valid effect. Use fuzz, soft_clip, or wave_folding."
+        return f"Error: '{effect_type}' "
 
     try:
         waveform, sample_rate = torchaudio.load(audio_path)
@@ -91,25 +77,24 @@ def apply_distortion(audio_path: str, effect_type: str) -> str:
         return f"Error applying distortion: {str(e)}"
 
 
-# ====================== GEMINI BOT SETUP ======================
 
-# 1. Initialize the model and pass it your Python function
+
+
 llm = genai.GenerativeModel(
     model_name="gemini-2.5-flash",
     tools=[apply_distortion],
     system_instruction=(
-        "You are a helpful AI Audio Engineering Assistant called Distort-o-Matic. "
+        "You are a helpful AI Audio Engineering Assistant called Neural DSPro "
         "You can explain DSP concepts, audio distortion, and neural networks. "
         "If the user asks you to apply an effect to an audio file, use your apply_distortion tool. "
         "Always be friendly, educational, and explain the sonic characteristics of the effect you just applied."
     )
 )
 
-# 2. Start a chat session. This natively handles conversation memory!
-# enable_automatic_function_calling=True means the SDK will run your Python code automatically behind the scenes.
+
 chat = llm.start_chat(enable_automatic_function_calling=True)
 
-# ====================== CREATE TEST AUDIO ======================
+
 test_file = "test_audio.wav"
 if not os.path.exists(test_file):
     print("Generating 3-second test tone...")
@@ -118,9 +103,10 @@ if not os.path.exists(test_file):
     sine_wave = 0.5 * torch.sin(2 * math.pi * 440.0 * t).unsqueeze(0) 
     torchaudio.save(test_file, sine_wave, sr)
 
-# ====================== RUN THE CHAT LOOP ======================
+
 if __name__ == "__main__":
-    print(f"\n🎸 Distort-o-Matic is ready!")
+    print(" ")
+    print(" Neural DSPro is ready!")
     print(f"I created a test file for you: {test_file}")
     print("Ask a question like: 'How does soft clipping work mathematically?'")
     print("Or trigger the model: 'Can you add fuzz to test_audio.wav?'")
@@ -132,11 +118,9 @@ if __name__ == "__main__":
             break
             
         try:
-            # Send the message. 
-            # If Gemini decides to use the tool, the SDK executes your Python function silently,
-            # reads the return string, and then hands the result back to Gemini to generate a response.
+            
             response = chat.send_message(user_input)
-            print(f"\nDistort-o-Matic: {response.text}\n")
+            print(f"\nNeural DSPro: {response.text}\n")
             
         except Exception as e:
             print(f"\nAPI Error: {e}\n")
